@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@layer utilities {
+  @keyframes wave {
+    0% {
+      transform: translateX(0) translateZ(0) scaleY(1);
+    }
+    50% {
+      transform: translateX(-25%) translateZ(0) scaleY(1.08);
+    }
+    100% {
+      transform: translateX(-50%) translateZ(0) scaleY(1);
+    }
+  }
+
+  @keyframes ripple {
+    0% {
+      opacity: 0.8;
+      transform: scale(0.8);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(2.2);
+    }
+  }
+
+  @keyframes stream {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: 0 40px;
+    }
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% {
+      opacity: 1;
+      filter: drop-shadow(0 0 8px rgba(14, 165, 233, 0.6));
+    }
+    50% {
+      opacity: 0.7;
+      filter: drop-shadow(0 0 16px rgba(14, 165, 233, 0.9));
+    }
+  }
+
+  .animate-wave-slow {
+    animation: wave 7s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
+  }
+
+  .animate-wave-fast {
+    animation: wave 4s cubic-bezier(0.36, 0.45, 0.63, 0.53) -2s infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2.5s ease-in-out infinite;
+  }
+}

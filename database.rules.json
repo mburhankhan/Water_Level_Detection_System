@@ -1,0 +1,108 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "config": {
+      ".read": "auth != null && auth.uid === root.child('config/adminUid').val()",
+      ".write": "auth != null && auth.uid === root.child('config/adminUid').val()",
+      "adminUid": {
+        ".validate": "newData.isString() && newData.val().length > 0"
+      }
+    },
+
+    "users": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.uid === root.child('config/adminUid').val())",
+        ".write": "auth != null && auth.uid === root.child('config/adminUid').val()",
+        "profileId": {
+          ".write": "auth != null && auth.uid === $uid && root.child('users/' + auth.uid + '/active').val() === true",
+          ".validate": "newData.isString() && root.child('alertProfiles/' + newData.val()).exists()"
+        },
+        "prefs": {
+          ".write": "auth != null && auth.uid === $uid && root.child('users/' + auth.uid + '/active').val() === true",
+          "timeZone": {
+            ".validate": "newData.isString() && newData.val().length > 0"
+          },
+          "use24h": {
+            ".validate": "newData.isBoolean()"
+          },
+          "theme": {
+            ".validate": "newData.isString() && (newData.val() === 'system' || newData.val() === 'light' || newData.val() === 'dark')"
+          }
+        }
+      }
+    },
+
+    "alertProfiles": {
+      ".read": "auth != null && (root.child('users/' + auth.uid + '/active').val() === true || root.child('deviceAuth/' + auth.uid).exists() || auth.uid === root.child('config/adminUid').val())",
+      ".write": "auth != null && auth.uid === root.child('config/adminUid').val()",
+      "$profileId": {
+        ".validate": "newData.hasChildren(['name', 'order', 'maxPerHour', 'reminderIntervalMin', 'types', 'ntfyTopic'])",
+        "name": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "order": { ".validate": "newData.isNumber()" },
+        "maxPerHour": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "reminderIntervalMin": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "ntfyTopic": { ".validate": "newData.isString() && newData.val().length > 0" }
+      }
+    },
+
+    "deviceAuth": {
+      "$authUid": {
+        ".read": "auth != null && (auth.uid === $authUid || auth.uid === root.child('config/adminUid').val())",
+        ".write": "auth != null && auth.uid === root.child('config/adminUid').val()",
+        ".validate": "newData.isString() && root.child('devices/' + newData.val()).exists()"
+      }
+    },
+
+    "devices": {
+      "$deviceId": {
+        "meta": {
+          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true || root.child('deviceAuth/' + auth.uid).val() === $deviceId)",
+          ".write": "auth != null && auth.uid === root.child('config/adminUid').val()"
+        },
+
+        "members": {
+          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true || root.child('deviceAuth/' + auth.uid).val() === $deviceId)",
+          ".write": "auth != null && auth.uid === root.child('config/adminUid').val()"
+        },
+
+        "status": {
+          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true)",
+          ".write": "auth != null && root.child('deviceAuth/' + auth.uid).val() === $deviceId",
+          ".validate": "newData.hasChildren(['state', 'since', 'lastSeen', 'appliedSettingsVersion', 'fwVersion'])",
+          "state": {
+            ".validate": "newData.val() === 'AVAILABLE' || newData.val() === 'FINISHED' || newData.val() === 'UNKNOWN'"
+          },
+          "since": { ".validate": "newData.isNumber()" },
+          "lastSeen": { ".validate": "newData.isNumber()" },
+          "appliedSettingsVersion": { ".validate": "newData.isNumber()" },
+          "fwVersion": { ".validate": "newData.isString()" }
+        },
+
+        "periods": {
+          ".indexOn": ["start"],
+          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true)",
+          ".write": "auth != null && root.child('deviceAuth/' + auth.uid).val() === $deviceId",
+          "$periodId": {
+            ".validate": "newData.hasChildren(['start']) && newData.child('start').isNumber() && (!newData.hasChild('end') || newData.child('end').val() === null || (newData.child('end').isNumber() && newData.child('end').val() >= newData.child('start').val()))"
+          }
+        },
+
+        "settings": {
+          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true || root.child('deviceAuth/' + auth.uid).val() === $deviceId)",
+          ".write": "auth != null && (auth.uid === root.child('config/adminUid').val() || (root.child('devices/' + $deviceId + '/meta/type').val() === 'pump' && auth.uid === root.child('devices/' + $deviceId + '/meta/ownerUid').val()))",
+          ".validate": "newData.hasChildren(['version', 'updatedAt', 'values']) && newData.child('version').isNumber() && newData.child('updatedAt').isNumber()"
+        },
+
+        "commands": {
+          ".read": "auth != null && root.child('deviceAuth/' + auth.uid).val() === $deviceId",
+          ".write": "auth != null && (auth.uid === root.child('config/adminUid').val() || (root.child('devices/' + $deviceId + '/meta/type').val() === 'pump' && auth.uid === root.child('devices/' + $deviceId + '/meta/ownerUid').val()))",
+          "$commandId": {
+            ".validate": "newData.hasChildren(['type', 'issuedBy', 'issuedAt', 'expiresAt']) && newData.child('expiresAt').isNumber() && newData.child('expiresAt').val() > now"
+          }
+        }
+      }
+    }
+  }
+}

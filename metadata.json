@@ -1,0 +1,6 @@
+{
+  "name": "Water Level Detection & Monitoring System",
+  "description": "Smart IoT water level detection and automated pump management system with ultrasonic telemetry, multi-tank monitoring, real-time alerts, and hardware firmware generator.",
+  "permissions": [],
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
