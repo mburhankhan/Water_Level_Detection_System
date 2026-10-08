@@ -19,6 +19,13 @@ export interface UserRecord {
   createdAt: number; // epoch ms (UTC)
   createdBy: string; // admin UID
   prefs: UserPrefs;
+  deviceIds?: Record<string, boolean>;
+  mustChangePassword?: boolean;
+}
+
+export interface DeviceIndexEntry {
+  name: string;
+  type: DeviceType;
 }
 
 export interface AlertProfileTypes {

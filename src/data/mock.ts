@@ -60,13 +60,17 @@ export const MOCK_USERS: Record<string, UserRecord> = {
     displayName: 'Admin (System)',
     role: 'admin',
     active: true,
-    profileId: 'prof-all',
+    profileId: '',
     createdAt: Date.now() - 60 * 86400000,
     createdBy: MOCK_ADMIN_UID,
     prefs: {
       timeZone: 'Asia/Karachi',
       use24h: false,
       theme: 'system',
+    },
+    deviceIds: {
+      'dev-pipe-01': true,
+      'dev-pipe-02': true,
     },
   },
   [MOCK_USER_UID]: {
@@ -82,6 +86,9 @@ export const MOCK_USERS: Record<string, UserRecord> = {
       use24h: false,
       theme: 'system',
     },
+    deviceIds: {
+      'dev-pipe-01': true,
+    },
   },
   [MOCK_INACTIVE_UID]: {
     email: 'inactive@watermonitor.local',
@@ -96,6 +103,20 @@ export const MOCK_USERS: Record<string, UserRecord> = {
       use24h: false,
       theme: 'system',
     },
+    deviceIds: {
+      'dev-pipe-01': true,
+    },
+  },
+};
+
+export const MOCK_DEVICE_INDEX: Record<string, { name: string; type: 'pipeline' | 'pump' }> = {
+  'dev-pipe-01': {
+    name: 'Main Street Pipeline',
+    type: 'pipeline',
+  },
+  'dev-pipe-02': {
+    name: 'North Sector Auxiliary Line',
+    type: 'pipeline',
   },
 };
 

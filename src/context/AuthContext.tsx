@@ -29,6 +29,7 @@ interface AuthContextType {
   switchDemoUser: (target: 'admin' | 'user' | 'inactive' | 'unregistered') => void;
   updateUserPrefs: (prefs: Partial<UserRecord['prefs']>) => Promise<void>;
   updateUserProfileId: (profileId: string) => Promise<void>;
+  clearMustChangePassword: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -73,20 +74,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    // Fetch /config/adminUid once
-    const adminUidRef = ref(db, 'config/adminUid');
-    get(adminUidRef)
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          setAdminUid(snapshot.val());
-        }
-      })
-      .catch((err) => console.error('[Error loading adminUid]', err));
-
     const unsubscribe = onAuthStateChanged(auth, async (fbUser: FirebaseUser | null) => {
       if (!fbUser) {
         setCurrentUser(null);
         setUserRecord(null);
+        setAdminUid(null);
         setLoading(false);
         return;
       }
@@ -94,6 +86,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentUser({ uid: fbUser.uid, email: fbUser.email });
 
       try {
+        // Read adminUid only after login
+        let currentAdminUid: string | null = null;
+        try {
+          const adminSnap = await get(ref(db, 'config/adminUid'));
+          if (adminSnap.exists()) {
+            currentAdminUid = adminSnap.val();
+            setAdminUid(currentAdminUid);
+          }
+        } catch {
+          // Non-admin users cannot read /config per security rules
+        }
+
         const userRef = ref(db, `users/${fbUser.uid}`);
         const userSnap = await get(userRef);
 
@@ -101,14 +105,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserRecord(userSnap.val());
         } else {
           // Self-heal: If uid === adminUid and record doesn't exist, create it!
-          const currentAdminUid = (await get(ref(db, 'config/adminUid'))).val();
           if (currentAdminUid && fbUser.uid === currentAdminUid) {
             const newAdminRecord: UserRecord = {
               email: fbUser.email || 'admin@watermonitor.local',
               displayName: 'Admin',
               role: 'admin',
               active: true,
-              profileId: 'prof-all',
+              profileId: '',
               createdAt: Date.now(),
               createdBy: fbUser.uid,
               prefs: {
@@ -190,9 +193,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const clearMustChangePassword = async () => {
+    if (!currentUser || !userRecord) return;
+    const updatedRecord: UserRecord = { ...userRecord, mustChangePassword: false };
+    setUserRecord(updatedRecord);
+
+    if (!isDemoMode && rtdb) {
+      await set(ref(rtdb, `users/${currentUser.uid}/mustChangePassword`), false);
+    }
+  };
+
+  // Decide admin ONLY by uid === /config/adminUid, never by the role text
   const isAdmin =
-    currentUser !== null &&
-    (userRecord?.role === 'admin' || (adminUid !== null && currentUser.uid === adminUid));
+    currentUser !== null && adminUid !== null && currentUser.uid === adminUid;
 
   const isActive = Boolean(userRecord?.active);
   const hasAccess = Boolean(currentUser && userRecord && isActive);
@@ -213,6 +226,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         switchDemoUser,
         updateUserPrefs,
         updateUserProfileId,
+        clearMustChangePassword,
       }}
     >
       {children}

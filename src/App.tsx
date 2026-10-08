@@ -6,6 +6,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AppShell } from './components/AppShell';
 import { LoginScreen } from './components/LoginScreen';
 import { AccessDeniedScreen } from './components/AccessDeniedScreen';
+import { MustChangePasswordScreen } from './components/MustChangePasswordScreen';
 import { HomePage } from './pages/HomePage';
 import { HistoryPage } from './pages/HistoryPage';
 import { SchedulePage } from './pages/SchedulePage';
@@ -35,6 +36,12 @@ const RootRouter: React.FC = () => {
   // If user is signed in but has no active user record, show AccessDeniedScreen
   if (!hasAccess) {
     return <AccessDeniedScreen />;
+  }
+
+  // If user must change temporary password, force change password screen
+  const { userRecord } = useAuth();
+  if (userRecord?.mustChangePassword) {
+    return <MustChangePasswordScreen />;
   }
 
   // User is authenticated and active: mount DeviceProvider and AppShell with routes

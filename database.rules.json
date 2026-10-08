@@ -11,13 +11,28 @@
       }
     },
 
+    "deviceIndex": {
+      ".read": "auth != null && auth.uid === root.child('config/adminUid').val()",
+      ".write": "auth != null && auth.uid === root.child('config/adminUid').val()"
+    },
+
     "users": {
+      ".read": "auth != null && auth.uid === root.child('config/adminUid').val()",
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || auth.uid === root.child('config/adminUid').val())",
-        ".write": "auth != null && auth.uid === root.child('config/adminUid').val()",
+        ".write": "auth != null && auth.uid === root.child('config/adminUid').val() && ($uid !== root.child('config/adminUid').val() || newData.exists())",
+        ".validate": "newData.hasChildren(['role', 'active']) && (($uid === root.child('config/adminUid').val() && newData.child('role').val() === 'admin' && newData.child('active').val() === true) || ($uid !== root.child('config/adminUid').val() && newData.child('role').val() === 'user' && newData.child('active').isBoolean()))",
+        "mustChangePassword": {
+          ".write": "auth != null && auth.uid === $uid && root.child('users/' + auth.uid + '/active').val() === true && newData.val() === false",
+          ".validate": "newData.isBoolean()"
+        },
         "profileId": {
           ".write": "auth != null && auth.uid === $uid && root.child('users/' + auth.uid + '/active').val() === true",
-          ".validate": "newData.isString() && root.child('alertProfiles/' + newData.val()).exists()"
+          ".validate": "newData.isString() && (newData.val() === '' || root.child('alertProfiles/' + newData.val()).exists())"
+        },
+        "deviceIds": {
+          ".read": "auth != null && (auth.uid === $uid || auth.uid === root.child('config/adminUid').val())",
+          ".write": "auth != null && auth.uid === root.child('config/adminUid').val()"
         },
         "prefs": {
           ".write": "auth != null && auth.uid === $uid && root.child('users/' + auth.uid + '/active').val() === true",
@@ -48,6 +63,7 @@
     },
 
     "deviceAuth": {
+      ".read": "auth != null && auth.uid === root.child('config/adminUid').val()",
       "$authUid": {
         ".read": "auth != null && (auth.uid === $authUid || auth.uid === root.child('config/adminUid').val())",
         ".write": "auth != null && auth.uid === root.child('config/adminUid').val()",
@@ -58,17 +74,17 @@
     "devices": {
       "$deviceId": {
         "meta": {
-          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true || root.child('deviceAuth/' + auth.uid).val() === $deviceId)",
+          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || (root.child('users/' + auth.uid + '/active').val() === true && root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true) || root.child('deviceAuth/' + auth.uid).val() === $deviceId)",
           ".write": "auth != null && auth.uid === root.child('config/adminUid').val()"
         },
 
         "members": {
-          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true || root.child('deviceAuth/' + auth.uid).val() === $deviceId)",
+          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || (root.child('users/' + auth.uid + '/active').val() === true && root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true) || root.child('deviceAuth/' + auth.uid).val() === $deviceId)",
           ".write": "auth != null && auth.uid === root.child('config/adminUid').val()"
         },
 
         "status": {
-          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true)",
+          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || (root.child('users/' + auth.uid + '/active').val() === true && root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true))",
           ".write": "auth != null && root.child('deviceAuth/' + auth.uid).val() === $deviceId",
           ".validate": "newData.hasChildren(['state', 'since', 'lastSeen', 'appliedSettingsVersion', 'fwVersion'])",
           "state": {
@@ -82,7 +98,7 @@
 
         "periods": {
           ".indexOn": ["start"],
-          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true)",
+          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || (root.child('users/' + auth.uid + '/active').val() === true && root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true))",
           ".write": "auth != null && root.child('deviceAuth/' + auth.uid).val() === $deviceId",
           "$periodId": {
             ".validate": "newData.hasChildren(['start']) && newData.child('start').isNumber() && (!newData.hasChild('end') || newData.child('end').val() === null || (newData.child('end').isNumber() && newData.child('end').val() >= newData.child('start').val()))"
@@ -90,7 +106,7 @@
         },
 
         "settings": {
-          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true || root.child('deviceAuth/' + auth.uid).val() === $deviceId)",
+          ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || (root.child('users/' + auth.uid + '/active').val() === true && root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true) || root.child('deviceAuth/' + auth.uid).val() === $deviceId)",
           ".write": "auth != null && (auth.uid === root.child('config/adminUid').val() || (root.child('devices/' + $deviceId + '/meta/type').val() === 'pump' && auth.uid === root.child('devices/' + $deviceId + '/meta/ownerUid').val()))",
           ".validate": "newData.hasChildren(['version', 'updatedAt', 'values']) && newData.child('version').isNumber() && newData.child('updatedAt').isNumber()"
         },

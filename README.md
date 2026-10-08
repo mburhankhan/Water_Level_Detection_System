@@ -1,18 +1,44 @@
-# AquaSense - Water Level Detection & Monitoring System
+# Water Monitor
 
-An interactive IoT and hardware simulation platform for real-time water level detection, automated pump relay control, multi-tank management, and Arduino/ESP8266 embedded firmware generation.
+A mobile-first installable web application (PWA) for an ESP32-based pipeline water availability sensor.
+
+Water Monitor informs residents when municipal or pipeline water begins flowing, when it finishes, and provides statistics and push alerts to prevent missing water supply windows.
 
 ## Features
-- **Visual Cross-Section Tank Simulation**: Animated fluid dynamics, fluid types (potable, rainwater, borewell), sound wave propagation from HC-SR04 ultrasonic transducer, and depth rulers.
-- **Microcontroller & Sensor Telemetry**: Ultrasonic echo flight time in microseconds, DS18B20 temperature sensor, water purity / turbidity (NTU), and 3-stage hardware status LEDs.
-- **Automated Pump & Relay Engine**: Configurable hysteresis thresholds for auto-refill start, auto-cutoff stop, dry-run protection lockout, and manual override.
-- **Serial Monitor**: Real-time UART terminal console streaming 115200 baud telemetry frames with command dispatch (`AT+STATUS`, `RELAY=ON`, `RELAY=OFF`, `AT+PING`).
-- **Embedded C++ Code Generator**: Generates complete, compilable Arduino IDE / PlatformIO sketch code tailored to selected MCU pins and tank dimensions.
-- **Multi-Tank Reservoir Matrix**: Manage overhead domestic tanks, basement sumps, and agricultural reservoirs with water transfer pump routines.
-- **Audio Synthesizer Alerts**: Synthesized Web Audio buzzer alarms for overflow and dry-run hazards.
+- **Live Status & Duration**: Clear availability indicator (`AVAILABLE`, `FINISHED`, `UNKNOWN`) and real-time duration counter.
+- **Supply History & Timeline**: Interactive range charts (7 / 30 / 90 days), daily 24-hour visual strips, and CSV export.
+- **Predictive Schedule & Probability**: Arrival probability by hour of day and median weekday start times with interquartile range (IQR).
+- **Push Alerts via Ntfy**: Multi-tier alert profiles (Full, Daytime, Urgent) integrated with deep links to the ntfy app.
+- **Schema-Driven Settings**: All pipeline and safety thresholds (confirmation windows, float polarity, heartbeat, offline timeout) generated from a central schema with pending/applied state synchronization.
+- **Admin Management**: User provisioning using secondary Firebase auth instances, device assignment, and alert profile management.
+- **Demo Mode**: Full-featured in-memory demo mode when Firebase credentials are not set.
 
-## Tech Stack
-- React 19 + TypeScript
-- Vite 6
-- Tailwind CSS
-- Lucide Icons
+## Technology Stack
+- **Frontend**: React 18 / 19, TypeScript (strict), Vite, Tailwind CSS, Recharts, Lucide Icons, HashRouter
+- **Backend**: Firebase Authentication (Email/Password) & Realtime Database (Free Spark tier)
+- **Notifications**: Ntfy (HTTP/ntfy:// push notifications)
+
+## Setup & Deployment
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Fill in your Firebase Spark credentials:
+   - `VITE_FIREBASE_API_KEY`
+   - `VITE_FIREBASE_AUTH_DOMAIN`
+   - `VITE_FIREBASE_DATABASE_URL`
+   - `VITE_FIREBASE_PROJECT_ID`
+   - `VITE_FIREBASE_APP_ID`
+   - `VITE_NTFY_BASE_URL` (optional, defaults to `https://ntfy.sh`)
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+5. Build for production / GitHub Pages:
+   ```bash
+   npm run build
+   ```
