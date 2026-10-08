@@ -43,7 +43,8 @@ export const AppShell: React.FC = () => {
                 <select
                   value={currentDevice?.id}
                   onChange={(e) => setCurrentDeviceId(e.target.value)}
-                  className="min-h-[44px] appearance-none bg-slate-800 border border-slate-700 rounded-xl pl-3 pr-8 py-1.5 text-xs text-white font-medium focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer"
+                  aria-label="Select active sensor device"
+                  className="min-h-[44px] appearance-none bg-slate-800 border border-slate-700 rounded-xl pl-3 pr-8 py-1.5 text-xs text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
                 >
                   {devices.map((d) => (
                     <option key={d.id} value={d.id}>
@@ -77,7 +78,16 @@ export const AppShell: React.FC = () => {
 
       {/* Main View Area: Mobile-first 360px base up to max-w-lg */}
       <main className="flex-1 max-w-lg w-full mx-auto px-4 py-5 pb-24">
-        <Outlet />
+        <React.Suspense
+          fallback={
+            <div className="flex flex-col items-center justify-center py-24 text-slate-500">
+              <div className="w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mb-3" />
+              <p className="text-xs font-mono">Loading view...</p>
+            </div>
+          }
+        >
+          <Outlet />
+        </React.Suspense>
       </main>
 
       {/* Bottom Tab Bar (360px mobile base, fixed bottom) */}

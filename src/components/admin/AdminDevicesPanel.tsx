@@ -22,6 +22,14 @@ import {
   HelpCircle,
 } from 'lucide-react';
 
+interface IncompleteDevice {
+  id: string;
+  authUid: string;
+  name: string;
+  type: 'pipeline' | 'pump';
+  selectedUserUids: string[];
+}
+
 export const AdminDevicesPanel: React.FC = () => {
   const { currentUser } = useAuth();
   const { devices } = useDevice();
@@ -37,6 +45,7 @@ export const AdminDevicesPanel: React.FC = () => {
   const [copiedPassword, setCopiedPassword] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [incompleteDevice, setIncompleteDevice] = useState<IncompleteDevice | null>(null);
 
   // Delete Device Modal state
   const [deviceToDelete, setDeviceToDelete] = useState<Device | null>(null);
@@ -77,18 +86,20 @@ export const AdminDevicesPanel: React.FC = () => {
     setDevicePassword(generateSecurePassword(16));
     setCopiedPassword(false);
     setCreateError(null);
+    setIncompleteDevice(null);
     setShowAddModal(true);
   };
 
   // Add device: 2-step process as required:
   // Step 1: write /devices/{id}/meta FIRST.
   // Step 2: write /deviceIndex/{id}, create device login with secondary app, write /deviceAuth/{authUid}: id, and memberships.
+  // If any step after creating login fails, keep incompleteDevice state and show "Finish setup" retry.
   const handleCreateDevice = async () => {
     const rawId = newDeviceId.trim();
     const id = rawId.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
     const name = newDeviceName.trim() || `Pipeline ${id}`;
 
-    if (!id || !devicePassword) {
+    if (!id || (!devicePassword && !incompleteDevice)) {
       setCreateError('Device ID and firmware credentials are required.');
       return;
     }
@@ -102,6 +113,8 @@ export const AdminDevicesPanel: React.FC = () => {
       type: newDeviceType,
       createdAt: nowEpoch,
     };
+
+    let authUid = incompleteDevice?.authUid || '';
 
     try {
       if (isDemoMode) {
@@ -133,6 +146,7 @@ export const AdminDevicesPanel: React.FC = () => {
           }
         });
 
+        setIncompleteDevice(null);
         showFeedback('success', `Device ${id} provisioned.`);
         setShowAddModal(false);
         return;
@@ -150,25 +164,24 @@ export const AdminDevicesPanel: React.FC = () => {
         type: newDeviceType,
       });
 
-      // (b) Create device login with secondary app
-      // Try email <id>@device.invalid; if rejected by Firebase, use <id>@devices.watermonitor.example
-      let deviceEmail = `${id}@device.invalid`;
-      let authUid = '';
-
-      const secondaryAuth = getSecondaryAuth();
-      if (secondaryAuth) {
-        try {
-          const cred = await createUserWithEmailAndPassword(secondaryAuth, deviceEmail, devicePassword);
-          authUid = cred.user.uid;
-        } catch (emailErr) {
-          // Fallback email domain
-          deviceEmail = `${id}@devices.watermonitor.example`;
-          const cred = await createUserWithEmailAndPassword(secondaryAuth, deviceEmail, devicePassword);
-          authUid = cred.user.uid;
+      // (b) Create device login with secondary app (if not already created)
+      if (!authUid) {
+        let deviceEmail = `${id}@device.invalid`;
+        const secondaryAuth = getSecondaryAuth();
+        if (secondaryAuth) {
+          try {
+            const cred = await createUserWithEmailAndPassword(secondaryAuth, deviceEmail, devicePassword);
+            authUid = cred.user.uid;
+          } catch (emailErr) {
+            // Fallback email domain
+            deviceEmail = `${id}@devices.watermonitor.example`;
+            const cred = await createUserWithEmailAndPassword(secondaryAuth, deviceEmail, devicePassword);
+            authUid = cred.user.uid;
+          }
+          await secondarySignOut(secondaryAuth);
+        } else {
+          authUid = `auth-${id}`;
         }
-        await secondarySignOut(secondaryAuth);
-      } else {
-        authUid = `auth-${id}`;
       }
 
       // (c) Write /deviceAuth/{authUid}: id, default status, default settings, and memberships
@@ -193,11 +206,20 @@ export const AdminDevicesPanel: React.FC = () => {
         batchUpdates[`users/${uid}/deviceIds/${id}`] = true;
       });
 
-      await update(ref(rtdb), batchUpdates);
+      try {
+        await update(ref(rtdb), batchUpdates);
+      } catch (dbErr) {
+        setIncompleteDevice({ id, authUid, name, type: newDeviceType, selectedUserUids });
+        throw new Error('Device login created, but database configuration failed. Tap "Finish setup" to retry.');
+      }
 
+      setIncompleteDevice(null);
       showFeedback('success', `Device ${id} successfully provisioned.`);
       setShowAddModal(false);
     } catch (err: unknown) {
+      if (authUid) {
+        setIncompleteDevice({ id, authUid, name, type: newDeviceType, selectedUserUids });
+      }
       const msg = getFriendlyErrorMessage(err, 'Failed to provision device.');
       setCreateError(msg);
     } finally {
@@ -271,6 +293,29 @@ export const AdminDevicesPanel: React.FC = () => {
           <span>{feedback.message}</span>
           <button type="button" onClick={() => setFeedback(null)}>
             <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Incomplete Device Pending Setup Banner */}
+      {incompleteDevice && !showAddModal && (
+        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex flex-wrap items-center justify-between gap-3 shadow-md">
+          <div>
+            <span className="font-bold block text-amber-200">Pending Device Setup: {incompleteDevice.id}</span>
+            <span className="text-[11px] text-amber-300/80">Device login created ({incompleteDevice.authUid}). Complete setup to write deviceAuth mapping.</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setNewDeviceId(incompleteDevice.id);
+              setNewDeviceName(incompleteDevice.name);
+              setNewDeviceType(incompleteDevice.type);
+              setSelectedUserUids(incompleteDevice.selectedUserUids);
+              setShowAddModal(true);
+            }}
+            className="min-h-[38px] px-3.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold shrink-0 text-xs shadow"
+          >
+            Finish Setup
           </button>
         </div>
       )}
@@ -365,6 +410,12 @@ export const AdminDevicesPanel: React.FC = () => {
               <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>{createError}</span>
+              </div>
+            )}
+
+            {incompleteDevice && (
+              <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between">
+                <span>Login created ({incompleteDevice.authUid}). Tap Finish Setup to write deviceAuth and link device.</span>
               </div>
             )}
 
@@ -471,11 +522,11 @@ export const AdminDevicesPanel: React.FC = () => {
               </button>
               <button
                 type="button"
-                disabled={creating || !newDeviceId || !devicePassword}
+                disabled={creating || !newDeviceId || (!devicePassword && !incompleteDevice)}
                 onClick={handleCreateDevice}
                 className="min-h-[44px] px-5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white shadow-md shadow-sky-600/20 disabled:opacity-50"
               >
-                {creating ? 'Provisioning...' : 'Provision Device'}
+                {creating ? 'Provisioning...' : incompleteDevice ? 'Finish Setup' : 'Provision Device'}
               </button>
             </div>
           </div>

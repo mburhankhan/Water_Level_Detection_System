@@ -94,9 +94,9 @@ export const AdminAlertProfilesPanel: React.FC = () => {
     setTimeout(() => setFeedback(null), 4000);
   };
 
-  // Check how many users are assigned to each profile
+  // Check how many users are assigned to each profile (counts ALL users, active or not)
   const getAssignedUserCount = (profileId: string) => {
-    return Object.values(usersMap).filter((u) => u.profileId === profileId).length;
+    return Object.values(usersMap).filter((u) => Boolean(u && u.profileId === profileId)).length;
   };
 
   // Open Create Modal
@@ -169,14 +169,14 @@ export const AdminAlertProfilesPanel: React.FC = () => {
     }
   };
 
-  // Delete profile with active user check
+  // Delete profile with user check (counts all users, active or not)
   const handleConfirmDelete = async () => {
     if (!profileToDelete) return;
 
     const count = getAssignedUserCount(profileToDelete.id);
     if (count > 0) {
       setDeleteError(
-        `Cannot delete this alert profile because it is currently assigned to ${count} active user(s). Reassign them first.`
+        `Cannot delete this alert profile because it is currently assigned to ${count} user(s) (active or inactive). Reassign them first.`
       );
       return;
     }
@@ -326,7 +326,14 @@ export const AdminAlertProfilesPanel: React.FC = () => {
                     type="button"
                     onClick={() => {
                       setProfileToDelete(p);
-                      setDeleteError(null);
+                      const count = getAssignedUserCount(p.id);
+                      if (count > 0) {
+                        setDeleteError(
+                          `Cannot delete this alert profile because it is currently assigned to ${count} user(s) (active or inactive). Reassign them first.`
+                        );
+                      } else {
+                        setDeleteError(null);
+                      }
                     }}
                     className="min-h-[38px] p-2 rounded-xl bg-slate-900 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 border border-slate-700 text-xs"
                     title="Delete profile"

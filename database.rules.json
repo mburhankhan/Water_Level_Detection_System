@@ -73,6 +73,7 @@
 
     "devices": {
       "$deviceId": {
+        ".write": "auth != null && auth.uid === root.child('config/adminUid').val()",
         "meta": {
           ".read": "auth != null && (auth.uid === root.child('config/adminUid').val() || (root.child('users/' + auth.uid + '/active').val() === true && root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true) || root.child('deviceAuth/' + auth.uid).val() === $deviceId)",
           ".write": "auth != null && auth.uid === root.child('config/adminUid').val()"

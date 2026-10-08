@@ -8,14 +8,15 @@ import { LoginScreen } from './components/LoginScreen';
 import { AccessDeniedScreen } from './components/AccessDeniedScreen';
 import { MustChangePasswordScreen } from './components/MustChangePasswordScreen';
 import { HomePage } from './pages/HomePage';
-import { HistoryPage } from './pages/HistoryPage';
-import { SchedulePage } from './pages/SchedulePage';
 import { AlertsPage } from './pages/AlertsPage';
-import { SettingsPage } from './pages/SettingsPage';
 import { Droplet } from 'lucide-react';
 
+const HistoryPage = React.lazy(() => import('./pages/HistoryPage').then((m) => ({ default: m.HistoryPage })));
+const SchedulePage = React.lazy(() => import('./pages/SchedulePage').then((m) => ({ default: m.SchedulePage })));
+const SettingsPage = React.lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+
 const RootRouter: React.FC = () => {
-  const { currentUser, hasAccess, loading } = useAuth();
+  const { currentUser, userRecord, hasAccess, loading } = useAuth();
 
   if (loading) {
     return (
@@ -39,7 +40,6 @@ const RootRouter: React.FC = () => {
   }
 
   // If user must change temporary password, force change password screen
-  const { userRecord } = useAuth();
   if (userRecord?.mustChangePassword) {
     return <MustChangePasswordScreen />;
   }

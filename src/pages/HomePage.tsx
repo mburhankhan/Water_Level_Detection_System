@@ -21,7 +21,8 @@ import {
   formatDuration,
 } from '../lib/dateUtils';
 import { computeSupplyStats } from '../lib/stats';
-import { DEFAULT_TIMEZONE } from '../config/constants';
+import { DEFAULT_TIMEZONE, FEATURE_PUMP } from '../config/constants';
+import { PumpControlStub } from '../components/PumpControlStub';
 
 export const HomePage: React.FC = () => {
   const { devices, currentDevice, setCurrentDeviceId, isOnline, periods } = useDevice();
@@ -270,6 +271,9 @@ export const HomePage: React.FC = () => {
           </span>
         </div>
       </div>
+
+      {/* Hidden Phase 2 Pump Control Stub */}
+      {FEATURE_PUMP && <PumpControlStub device={currentDevice} />}
     </div>
   );
 };

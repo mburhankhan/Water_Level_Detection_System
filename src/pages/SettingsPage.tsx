@@ -41,10 +41,17 @@ import {
 } from 'firebase/auth';
 import { ref, update } from 'firebase/database';
 import { DEFAULT_TIMEZONE } from '../config/constants';
+import { PWAInstallButton } from '../components/PWAInstallButton';
 
-import { AdminUsersPanel } from '../components/admin/AdminUsersPanel';
-import { AdminAlertProfilesPanel } from '../components/admin/AdminAlertProfilesPanel';
-import { AdminDevicesPanel } from '../components/admin/AdminDevicesPanel';
+const AdminUsersPanel = React.lazy(() =>
+  import('../components/admin/AdminUsersPanel').then((m) => ({ default: m.AdminUsersPanel }))
+);
+const AdminAlertProfilesPanel = React.lazy(() =>
+  import('../components/admin/AdminAlertProfilesPanel').then((m) => ({ default: m.AdminAlertProfilesPanel }))
+);
+const AdminDevicesPanel = React.lazy(() =>
+  import('../components/admin/AdminDevicesPanel').then((m) => ({ default: m.AdminDevicesPanel }))
+);
 
 const TIMEZONE_OPTIONS = [
   { value: 'Asia/Karachi', label: 'Asia/Karachi (PKT, UTC+5)' },
@@ -260,10 +267,19 @@ export const SettingsPage: React.FC = () => {
             })}
           </div>
 
-          {/* Render Active Admin Panel */}
-          {adminTab === 'users' && <AdminUsersPanel />}
-          {adminTab === 'profiles' && <AdminAlertProfilesPanel />}
-          {adminTab === 'devices' && <AdminDevicesPanel />}
+          {/* Render Active Admin Panel with Suspense */}
+          <React.Suspense
+            fallback={
+              <div className="p-8 text-center bg-slate-800/80 rounded-2xl border border-slate-700/80 text-slate-400">
+                <div className="w-6 h-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                <span className="text-xs font-mono">Loading management module...</span>
+              </div>
+            }
+          >
+            {adminTab === 'users' && <AdminUsersPanel />}
+            {adminTab === 'profiles' && <AdminAlertProfilesPanel />}
+            {adminTab === 'devices' && <AdminDevicesPanel />}
+          </React.Suspense>
           {adminTab === 'tunables' && (
             <>
               {currentDevice ? (
@@ -525,6 +541,15 @@ export const SettingsPage: React.FC = () => {
                   );
                 })}
               </div>
+            </div>
+
+            {/* PWA App Installation Option */}
+            <div className="pt-3 border-t border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div>
+                <span className="block text-xs font-semibold text-slate-200">Mobile App Installation</span>
+                <span className="text-[11px] text-slate-400">Install to your device home screen for quick offline access</span>
+              </div>
+              <PWAInstallButton />
             </div>
           </div>
 

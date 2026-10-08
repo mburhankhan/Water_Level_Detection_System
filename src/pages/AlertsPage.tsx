@@ -125,8 +125,17 @@ export const AlertsPage: React.FC = () => {
           return (
             <div
               key={profile.id}
+              role="radio"
+              aria-checked={isSelected}
+              tabIndex={0}
               onClick={() => handleSelectProfile(profile.id)}
-              className={`cursor-pointer rounded-2xl p-4 transition-all duration-200 border flex flex-col justify-between ${
+              onKeyDown={(e) => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSelectProfile(profile.id);
+                }
+              }}
+              className={`cursor-pointer rounded-2xl p-4 transition-all duration-200 border flex flex-col justify-between focus:outline-none focus:ring-2 focus:ring-sky-500 ${
                 isSelected
                   ? 'bg-slate-800/95 border-sky-500 ring-1 ring-sky-500/50 shadow-lg shadow-sky-500/10'
                   : 'bg-slate-800/60 border-slate-700/70 hover:bg-slate-800/80 hover:border-slate-600'

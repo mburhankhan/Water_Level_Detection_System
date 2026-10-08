@@ -125,7 +125,8 @@ The database uses default-deny security (`".read": false`, `".write": false` at 
    - Read on `/deviceAuth/{authUid}`: Device itself (`auth.uid === $authUid`) and admin.
    - Write: Admin only. Validates that referenced device exists in `/devices/{id}`.
 
-7. **`/devices/{deviceId}` (Member-based reads require active account)**:
+7. **`/devices/{deviceId}`**:
+   - Write on `/devices/{deviceId}`: Admin only (`auth.uid === adminUid`), allowing device deletion and multi-path updates directly at the device node while preserving all sub-path rules.
    - To prevent disabled users from reading telemetry, all member-based read rules enforce `users/{auth.uid}/active === true`:
      `auth.uid === adminUid || (root.child('users/' + auth.uid + '/active').val() === true && root.child('devices/' + $deviceId + '/members/' + auth.uid).val() === true)`
    - `meta` & `members`: Read by active members, admin, and the device itself; write by admin.
