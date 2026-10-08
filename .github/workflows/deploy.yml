@@ -35,7 +35,15 @@ jobs:
 
       - name: Run unit tests
         run: bun run test
-
+      - name: Check required Firebase variables
+        env:
+          K: ${{ vars.VITE_FIREBASE_API_KEY }}
+          D: ${{ vars.VITE_FIREBASE_DATABASE_URL }}
+          P: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
+        run: |
+          [ -n "$K" ] || { echo "::error::VITE_FIREBASE_API_KEY is empty"; exit 1; }
+          [ -n "$D" ] || { echo "::error::VITE_FIREBASE_DATABASE_URL is empty"; exit 1; }
+          [ -n "$P" ] || { echo "::error::VITE_FIREBASE_PROJECT_ID is empty"; exit 1; }
       - name: Build static web application
         env:
           VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
