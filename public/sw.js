@@ -10,6 +10,10 @@ const APP_SHELL_ASSETS = [
   './index.html',
   './manifest.webmanifest',
   './icon.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-512-maskable.png',
+  './apple-touch-icon.png',
 ];
 
 // Install: precache the core app shell assets

@@ -67,4 +67,17 @@ describe('M5 Features & Production Specifications', () => {
     expect(getRepoBase('acme-corp/iot-water-sensor')).toBe('/iot-water-sensor/');
     expect(getRepoBase(undefined)).toBe('/water-level-detection-system/');
   });
+
+  it('validates PWA icons specification in manifest and link rels', () => {
+    const manifestIcons = [
+      { src: './icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: './icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: './icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      { src: './icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+    ];
+
+    expect(manifestIcons.some((i) => i.sizes === '192x192' && i.type === 'image/png')).toBe(true);
+    expect(manifestIcons.some((i) => i.sizes === '512x512' && i.purpose === 'maskable')).toBe(true);
+    expect(manifestIcons.some((i) => i.sizes === '512x512' && i.purpose === 'any')).toBe(true);
+  });
 });

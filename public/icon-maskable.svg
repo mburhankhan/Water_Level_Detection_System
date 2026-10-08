@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" fill="#0f172a"/>
+  <defs>
+    <linearGradient id="dropGrad" x1="256" y1="80" x2="256" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="innerGlow" x1="256" y1="120" x2="256" y2="350" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- Water Droplet -->
+  <path d="M256 80 C256 80 140 226 140 326 C140 390 192 432 256 432 C320 432 372 390 372 326 C372 226 256 80 256 80 Z" fill="url(#dropGrad)"/>
+  <!-- Droplet Highlight -->
+  <path d="M256 120 C256 120 180 236 180 316 C180 340 195 365 220 380 C200 360 195 330 200 305 C210 250 256 160 256 120 Z" fill="url(#innerGlow)"/>
+</svg>

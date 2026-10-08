@@ -72,21 +72,15 @@ To bootstrap your admin account:
 3. Note the generated **User UID** for this user.
 4. Go to **Realtime Database > Data** tab:
    - Hover over the root node, click the **+** (Add child) button.
-   - Add the `config` node:
-     - Name: `config`
-     - Child name: `adminUid`
-     - Value: `<paste your User UID here>`
+   - Set the child name: `config`
+   - Under `config`, set child name: `adminUid`
+   - Set value: `<paste your User UID here>`
    - Click **Add**.
-   - Next, under `users/<adminUid>`, add your admin profile:
-     - `users/<adminUid>/email`: `"admin@example.com"`
-     - `users/<adminUid>/name`: `"System Administrator"`
-     - `users/<adminUid>/role`: `"admin"`
-     - `users/<adminUid>/active`: `true`
-     - `users/<adminUid>/profileId`: `"prof-full"`
-     - `users/<adminUid>/deviceIds`: `{}`
+   *(Note: The only manual database entry is `config/adminUid`. You do NOT need to create `/users/<adminUid>` by hand — the application automatically self-provisions the administrator record in the database upon your first sign-in).*
 5. Now open the deployed web application URL:
    - Enter your admin email and password on the Login page.
    - Tap **Sign In**.
+   - Your administrator profile is automatically created in the database.
    - Navigate to **Settings** (`#settings`) and scroll to **Administration**.
    - Use the **Devices** tab to provision ESP32 devices and generate firmware credentials.
    - Use the **Alert Profiles** tab to customize notification thresholds and ntfy topics.
